@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  db_rrhh:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - '6432:5432'
+    volumes: 
+      - postgres_rrhh:/var/lib/postgresql/data
+      - ./customPostgresql.conf:/var/lib/postgresql/data/postgresql.conf
+      - ./import:/tmp
+volumes:
+  postgres_rrhh:
+    driver: local
