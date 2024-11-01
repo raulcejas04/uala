@@ -5,9 +5,11 @@ import (
 	"strings"
 	"sync"
 	"time"
+	database "twitter/models/database"
 	configs "twitter/pkg/configs"
 	kafka "twitter/pkg/kafka"
 	redis "twitter/pkg/redis"
+	service "twitter/service"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -19,15 +21,6 @@ const (
 type producer struct {
 	twitts chan string
 	quit   chan chan error
-}
-
-func saveRedis(mensaje string, current time.Time, wg *sync.WaitGroup) {
-	var mensajes []string
-	log.Infof(" mensaje ", mensaje)
-	partes := strings.Split(mensaje, ";")
-	mensajes = append(mensajes, fmt.Sprintf("%s;%s", current.Format(time.RFC3339), partes[1]))
-	redis.SAdd(partes[0], mensajes)
-	wg.Done()
 }
 
 func (p *producer) Close() error {
@@ -43,6 +36,13 @@ func main() {
 
 	configs.InitConfig("./")
 	redis.ConnectRedis()
+
+	db := database.NewPostgresDB()
+	err := db.Connect()
+	if err != nil {
+		log.Fatalf("Failed to connect to the database: %v", err)
+	}
+	svc := service.NewDbService(db)
 
 	prod := &producer{
 		twitts: make(chan string),
@@ -92,8 +92,16 @@ func main() {
 		} else {
 
 			wg.Add(1)
-			current := time.Now().Local()
-			go saveRedis(s, current, &wg)
+
+			partes := strings.Split(s, ";")
+			result, err := svc.GetSeguidores(partes[0])
+			if err != nil {
+				log.Fatalf("Failed to fetch data: %v", err)
+			}
+			for _, seguidor := range result {
+				current := time.Now().Local()
+				go redis.SaveRedis(seguidor["username"].(string), partes[1], current, &wg)
+			}
 		}
 	}
 

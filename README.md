@@ -7,12 +7,17 @@ docker-compose v2.18.1
 
 Levantar kafka y redis
 
-Entrar en los directorios ./kafka y ./redis y correr "docker-composer up -d". Si los volumenes son creados sin permisos suficientes no va a levantar, entonces hay que darle permisos 777 con chmod -R ugo+rwx y tambien chown -R usuario:usuario ./directorio.
+Entrar en los directorios ./kafka y ./redis y correr "docker-composer up -d". 
+
+PENDIENTE CON KAFKA que no tuve tiempo de resolver
+con docker-compose up -d kafka va a crear subdirectorios debajo de ./data 
+hay que darle permisos 777 con chmod -R ugo+rwx ./data y correr de nuevo docker-compose up -d y levanta
+cuando se reinicia puede que haya que borrar el directorio ./data y de nuevo darle permisos
 
 Entrar en twitter y levantar los 2 microservicios:
 
 go run cmd/ingestor/main.go
-go run cmd/nuevotwitter/main.go
+go run cmd/feed/main.go
 
 Enviar mensajes:
 curl -X POST localhost:8080/nombre%20del%20usuario/mi%20mensaje%20de%20twitter

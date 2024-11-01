@@ -12,6 +12,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:latest
+    user: root
     depends_on:
       - zookeeper
     ports:
@@ -21,6 +22,8 @@ services:
       - ./data/kafka1/data:/var/lib/kafka/data
       - ./data/kafka1/etc:/etc/kafka
     environment:
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_ENABLE_KRAFT: no
       KAFKA_BROKER_ID: 1
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
